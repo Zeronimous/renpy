@@ -1,67 +1,83 @@
-# Ren'Py Translation Tool
+# Herramienta de Traduccion para Ren'Py
 
-This tool helps you extract text from a Ren'Py game, translate it, and inject it back into the game.
+Este conjunto de herramientas te ayuda a extraer textos de un juego de Ren'Py, prepararlos para una traduccion comoda, y reinyectarlos de vuelta en el juego.
 
-## Prerequisites
+## Prerrequisitos
 
 - Python 3
-- pip (Python package installer)
+- pip (Instalador de paquetes de Python)
 
-## How to Use
+## Flujo de Trabajo de Traduccion (5 Pasos)
 
-1.  **Place the script:** Put the `renpy_translator.py` script in the root directory of your Ren'Py game (the same folder that contains the game's `.exe` file).
+### Paso 1: Extraer los textos del juego al archivo JSON
+Coloca los scripts `renpy_translator.py` y `translator_helper.py` en la carpeta raiz de tu juego (donde esta el `.exe`).
 
-2.  **Install dependencies:** The script requires the `rpycdec` library. It will attempt to detect if it's not installed, but you can also install it manually:
-    ```bash
-    pip install rpycdec
-    ```
+Primero, asegurate de tener las dependencias necesarias. Puedes instalarlas con pip:
+```bash
+pip install rpycdec
+```
+Para evitar problemas con multiples instalaciones de Python (muy comun en Windows), se recomienda usar este comando:
+```bash
+python -m pip install rpycdec
+```
+Luego, para prevenir errores de codificacion en la consola de Windows, ejecuta el script de extraccion con el siguiente comando:
+```bash
+# Para PowerShell
+$env:PYTHONUTF8=1; python renpy_translator.py extract
 
-3.  **Extract the text:** Open a terminal or command prompt in the game's root directory and run the following command:
-    ```bash
-    python renpy_translator.py extract
-    ```
-    This command will:
-    - Decompile the game's script files (`.rpyc` to `.rpy`).
-    - Extract all the dialogue and menu options into a file named `translations.json`.
+# Para CMD (Simbolo del sistema)
+set PYTHONUTF8=1 && python renpy_translator.py extract
+```
+Este comando creara (o actualizara) un archivo llamado `translations.json`, que contiene todos los textos del juego en un formato estructurado.
 
-4.  **Translate the text:**
-    - Open the `translations.json` file in a text editor.
-    - For each entry, you will see an `"original"` field with the text to be translated, and an empty `"translation"` field.
-    - **Fill in the `"translation"` field** with your translated text. Make sure the translated text is enclosed in double quotes.
+### Paso 2: Exportar los textos a un archivo `.txt` para traducir
+Ahora, usa el script de ayuda para convertir el complejo archivo `.json` en un simple archivo de texto `.txt` que puedes editar facilmente.
 
-    Example of a translation entry:
-    ```json
-    {
-        "game/script.rpy:123": {
-            "original": "\"Hello, world!\"",
-            "translation": "",
-            "character": "e",
-            "trailing": ""
-        }
-    }
-    ```
-    After translation to Spanish, it would look like this:
-    ```json
-    {
-        "game/script.rpy:123": {
-            "original": "\"Hello, world!\"",
-            "translation": "\"¡Hola, mundo!\"",
-            "character": "e",
-            "trailing": ""
-        }
-    }
-    ```
+Ejecuta el siguiente comando:
+```bash
+python translator_helper.py export
+```
+Esto creara un archivo llamado `translations.txt`.
 
-5.  **Inject the translated text:** Once you have finished translating, run the following command:
-    ```bash
-    python renpy_translator.py inject translations.json
-    ```
-    This will take your translated text from the `"translation"` field and update the game's script files.
+### Paso 3: Traducir el archivo `.txt`
+Abre `translations.txt` con cualquier editor de texto. Veras una lista numerada de todos los dialogos. Simplemente traduce cada linea, manteniendo el numero y el parentesis al principio.
 
-6.  **Test the game:** Launch the game to see your translations in action.
+**Ejemplo:**
+```
+1) Complete the puzzle.
+2) Hint
+```
+**Despues de traducir:**
+```
+1) Completa el puzle.
+2) Pista
+```
+**Importante:** No borres ni anadas lineas. El numero de lineas debe ser exactamente el mismo antes y despues de traducir.
+
+### Paso 4: Importar las traducciones de vuelta al archivo JSON
+Una vez que hayas terminado de traducir el `.txt`, usa el script de ayuda de nuevo para inyectar tus traducciones en el archivo `.json`.
+
+Ejecuta el siguiente comando:
+```bash
+python translator_helper.py import
+```
+Este comando leera tu `translations.txt`, tomara las traducciones y actualizara el archivo `translations.json`, rellenando los campos `"translation"`.
+
+### Paso 5: Inyectar las traducciones en el juego
+Finalmente, usa el primer script de nuevo para tomar el `translations.json` actualizado e inyectar los textos traducidos directamente en los archivos del juego.
+
+Ejecuta el comando:
+```bash
+# Para PowerShell
+$env:PYTHONUTF8=1; python renpy_translator.py inject translations.json
+
+# Para CMD (Simbolo del sistema)
+set PYTHONUTF8=1 && python renpy_translator.py inject translations.json
+```
+¡Y listo! Ahora puedes iniciar el juego para ver tus traducciones.
 
 ## Disclaimer
 
-- This tool modifies the game's script files. It is highly recommended to **create a backup of your game folder** before using this tool.
-- The text extraction uses regular expressions and may not capture every single piece of text in complex games. It is designed to capture the most common dialogue and menu formats.
-- The injection process directly replaces text in the script files. Any errors in the translated JSON file could potentially break the game.
+- Estas herramientas modifican los archivos de script del juego. Se recomienda encarecidamente **crear una copia de seguridad de la carpeta del juego** antes de empezar.
+- La extraccion de texto usa expresiones regulares y puede que no capture el 100% del texto en juegos con formatos muy inusuales, pero esta disenada para los casos mas comunes.
+- Cualquier error en el proceso de traduccion (como borrar una linea en el `.txt`) podria causar errores al inyectar los textos.
